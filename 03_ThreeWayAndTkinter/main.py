@@ -9,7 +9,7 @@ def create_window():
     for i in range(4):
         window.grid_columnconfigure(i, weight=1, uniform="col_gr")
     for i in range(1, 5):
-        window.grid_rowconfigure(i, weight=1, uniform="col_gr")
+        window.grid_rowconfigure(i, weight=1, uniform="row_gr")
     return window
 
 
@@ -18,7 +18,7 @@ def new_tiles_order(tiles, order):
     order[order.index(15)] = order[-1]
     order[-1] = 15
     for i, tile in enumerate(tiles):
-        tile.grid(column=order[i]%4, row=order[i]//4+1, sticky=tk.E+tk.W+tk.N+tk.S)
+        tile.grid(column=order[i]%4, row=order[i]//4+1, sticky=tk.NSEW)
 
 
 def move_tile(i, order, tiles):
