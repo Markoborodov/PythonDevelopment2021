@@ -10,10 +10,6 @@ class Application(tk.Frame):
         self.master.rowconfigure(0, weight=1)
         self.grid(sticky="NEWS")
         self.createWidgets()
-        for column in range(self.grid_size()[0]):
-            self.columnconfigure(column, weight=1)
-        for row in range(self.grid_size()[1]):
-            self.rowconfigure(row, weight=1)
 
     def __getattr__(self, item):
         return Application.widget_constructor(self, item)
@@ -24,7 +20,13 @@ class Application(tk.Frame):
             class Widget(type):
                 def __init__(self, geometry, **kwargs):
                     super().__init__(master, **kwargs)
-                    self.grid()
+                    g_dict = Application.geometry_to_dict(geometry)
+                    self.grid(row=g_dict['row'], rowspan=g_dict['rowspan'],
+                              column=g_dict['column'], columnspan=g_dict['columnspan'],
+                              sticky=g_dict['sticky'])
+                    self.master.rowconfigure(g_dict['row'], weight=g_dict['row_weight'])
+                    self.master.columnconfigure(g_dict['column'],
+                                                weight=g_dict['column_weight'])
 
                 def __getattr__(self, item):
                     return Application.widget_constructor(self, item)
@@ -32,6 +34,26 @@ class Application(tk.Frame):
             setattr(master, name, Widget(geometry, **kwargs))
 
         return widget_init
+
+    @staticmethod
+    def geometry_to_dict(geometry):
+        res = {"row": None, "row_weight": 1, "rowspan": 1,
+               "column": None, "column_weight": 1, "columnspan": 1,
+               "sticky": "NEWS"}
+        row_col_sticky = geometry.replace('/', ':').split(':')
+        if len(row_col_sticky) == 3:
+            res["sticky"] = row_col_sticky[2]
+        for dim, geom in (("row", row_col_sticky[0]), ("column", row_col_sticky[1])):
+            if '+' in geom:
+                geom = geom.split('+')
+                res[dim + 'span'] = int(geom[1]) + 1
+                geom = geom[0]
+            if '.' in geom:
+                geom = geom.split('.')
+                res[dim + '_weight'] = geom[1]
+                geom = int(geom[0])
+            res[dim] = int(geom)
+        return res
 
 
 if __name__ == '__main__':
